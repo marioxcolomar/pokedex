@@ -9,11 +9,12 @@ import (
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
+	config := commandConfig{}
 	fmt.Print("Pokedex > ")
 	for scanner.Scan() {
 		input := strings.ToLower(strings.Trim(scanner.Text(), " "))
-		firstWord := strings.Split(input, " ")
-		fmt.Printf("Your command was: %s\n", firstWord[0])
+		command := strings.Split(input, " ")[0]
+		runCommand(command, &config)
 	}
 
 	if err := scanner.Err(); err != nil {
