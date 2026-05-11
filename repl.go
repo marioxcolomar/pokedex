@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"pokedex/internal/pokecache"
 	"strings"
 )
 
@@ -16,13 +17,13 @@ func cleanInput(text string) []string {
 	return words
 }
 
-func commandExit(config *commandConfig) error {
+func commandExit(config *commandConfig, client *pokecache.Cache) error {
 	fmt.Print("Closing the Pokedex... Goodbye!\n")
 	os.Exit(0)
 	return fmt.Errorf("program closed")
 }
 
-func commandHelp(config *commandConfig) error {
+func commandHelp(config *commandConfig, client *pokecache.Cache) error {
 	fmt.Print(`Welcome to the Pokedex!
 Usage:
 
@@ -33,7 +34,6 @@ exit: Exit the Pokedex`)
 }
 
 type commandConfig struct {
-	id          string
 	nextUrl     string
 	previousUrl string
 }
@@ -53,7 +53,19 @@ type PokeResponse struct {
 	response  JsonResponse
 }
 
-func getPokeApi(url string) PokeResponse {
+func getPokeApi(url string, client *pokecache.Cache) PokeResponse {
+	if val, ok := client.Get(url); ok {
+		cacheJson := JsonResponse{}
+		err := json.Unmarshal(val, &cacheJson)
+		if err != nil {
+			cacheLocations := make([]string, 0, len(cacheJson.Results))
+			for _, loc := range cacheJson.Results {
+				cacheLocations = append(cacheLocations, loc.Name)
+			}
+			return PokeResponse{locations: cacheLocations, response: cacheJson}
+		}
+	}
+
 	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
@@ -75,15 +87,16 @@ func getPokeApi(url string) PokeResponse {
 	for _, loc := range responseJson.Results {
 		locations = append(locations, loc.Name)
 	}
+	client.Add(url, body)
 	return PokeResponse{locations, responseJson}
 }
 
-func commandMap(config *commandConfig) error {
+func commandMap(config *commandConfig, client *pokecache.Cache) error {
 	baseUrl := "https://pokeapi.co/api/v2/location-area/"
 	if config.nextUrl != "" {
 		baseUrl = config.nextUrl
 	}
-	res := getPokeApi(baseUrl)
+	res := getPokeApi(baseUrl, client)
 
 	locationAreas := strings.Join(res.locations, "\n")
 	fmt.Printf("%s", locationAreas)
@@ -95,13 +108,13 @@ func commandMap(config *commandConfig) error {
 	return nil
 }
 
-func commandMapBack(config *commandConfig) error {
+func commandMapBack(config *commandConfig, client *pokecache.Cache) error {
 	if config.previousUrl == "" {
 		fmt.Println("you are on the first page")
 		return nil
 	}
 	baseUrl := config.previousUrl
-	res := getPokeApi(baseUrl)
+	res := getPokeApi(baseUrl, client)
 
 	locationAreas := strings.Join(res.locations, "\n")
 	fmt.Printf("%s", locationAreas)
@@ -116,10 +129,10 @@ func commandMapBack(config *commandConfig) error {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(config *commandConfig) error
+	callback    func(config *commandConfig, client *pokecache.Cache) error
 }
 
-func runCommand(command string, config *commandConfig) {
+func runCommand(command string, config *commandConfig, client *pokecache.Cache) {
 	commandMap := map[string]cliCommand{
 		"help": {
 			name:        "help",
@@ -146,6 +159,6 @@ func runCommand(command string, config *commandConfig) {
 	if !ok {
 		fmt.Print("Unknown command\n")
 	} else {
-		cmd.callback(config)
+		cmd.callback(config, client)
 	}
 }
