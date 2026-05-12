@@ -11,36 +11,35 @@ type cacheEntry struct {
 }
 
 type Cache struct {
-	mu       sync.Mutex
-	items    map[string]cacheEntry
-	interval time.Duration
+	cache map[string]cacheEntry
+	mux   *sync.Mutex
 }
 
-func NewCache(interval time.Duration) *Cache {
-	c := &Cache{
-		items:    make(map[string]cacheEntry),
-		interval: interval,
+func NewCache(interval time.Duration) Cache {
+	c := Cache{
+		cache: make(map[string]cacheEntry),
+		mux:   &sync.Mutex{},
 	}
 
-	go c.reapLoop()
+	go c.reapLoop(interval)
 
 	return c
 }
 
 func (c *Cache) Add(key string, val []byte) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
-	c.items[key] = cacheEntry{
+	c.cache[key] = cacheEntry{
 		createdAt: time.Now(),
 		val:       val,
 	}
 }
 
 func (c *Cache) Get(key string) ([]byte, bool) {
-	c.mu.Lock()
-	entry, ok := c.items[key]
-	c.mu.Unlock()
+	c.mux.Lock()
+	entry, ok := c.cache[key]
+	c.mux.Unlock()
 
 	if !ok {
 		return nil, false
@@ -49,18 +48,18 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 	return entry.val, true
 }
 
-func (c *Cache) reapLoop() {
-	ticker := time.NewTicker(c.interval)
+func (c *Cache) reapLoop(interval time.Duration) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		c.mu.Lock()
-		for key, entry := range c.items {
-			if time.Since(entry.createdAt) >= c.interval {
-				delete(c.items, key)
+		c.mux.Lock()
+		for key, entry := range c.cache {
+			if time.Since(entry.createdAt) >= interval {
+				delete(c.cache, key)
 			}
 		}
 
-		c.mu.Unlock()
+		c.mux.Unlock()
 	}
 }

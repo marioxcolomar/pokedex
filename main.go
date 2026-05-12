@@ -4,20 +4,26 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"pokedex/internal/pokecache"
+	"pokedex/internal/pokeapi"
 	"strings"
 	"time"
 )
 
 func main() {
-	pokeClient := pokecache.NewCache(5 * time.Second)
+	pokeClient := pokeapi.NewClient(5*time.Second, time.Minute*5)
 	scanner := bufio.NewScanner(os.Stdin)
-	config := commandConfig{}
+	config := &commandConfig{
+		pokeapiClient: pokeClient,
+	}
 	fmt.Print("Pokedex > ")
 	for scanner.Scan() {
 		input := strings.ToLower(strings.Trim(scanner.Text(), " "))
-		command := strings.Split(input, " ")[0]
-		runCommand(command, &config, pokeClient)
+		inputs := strings.Split(input, " ")
+		command := inputs[0]
+		if len(inputs) > 1 {
+			config.id = &inputs[1]
+		}
+		runCommand(command, config)
 	}
 
 	if err := scanner.Err(); err != nil {
