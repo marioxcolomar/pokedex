@@ -21,7 +21,7 @@ func main() {
 		inputs := strings.Split(input, " ")
 		command := inputs[0]
 		if len(inputs) > 1 {
-			config.id = &inputs[1]
+			config.name = &inputs[1]
 		}
 		runCommand(command, config)
 	}
