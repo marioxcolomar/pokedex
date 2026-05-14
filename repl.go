@@ -14,9 +14,10 @@ func cleanInput(text string) []string {
 
 type commandConfig struct {
 	pokeapiClient pokeapi.Client
-	id            *string
+	name          *string
 	nextUrl       *string
 	previousUrl   *string
+	caughtPokemon map[string]pokeapi.Pokemon
 }
 
 type cliCommand struct {
@@ -51,6 +52,11 @@ func runCommand(command string, config *commandConfig) {
 			name:        "explore",
 			description: "Explore a given location area in Pokedex",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch <pokemon_name>",
+			description: "Catch a desired Pokemon",
+			callback:    commandCatch,
 		},
 	}
 	cmd, ok := commandMap[command]
