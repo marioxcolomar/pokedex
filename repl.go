@@ -49,7 +49,7 @@ func runCommand(command string, config *commandConfig) {
 			callback:    commandMapBack,
 		},
 		"explore": {
-			name:        "explore",
+			name:        "explore <location_name>",
 			description: "Explore a given location area in Pokedex",
 			callback:    commandExplore,
 		},
