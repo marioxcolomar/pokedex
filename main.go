@@ -14,6 +14,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	config := &commandConfig{
 		pokeapiClient: pokeClient,
+		caughtPokemon: map[string]pokeapi.Pokemon{},
 	}
 	fmt.Print("Pokedex > ")
 	for scanner.Scan() {
