@@ -58,6 +58,16 @@ func runCommand(command string, config *commandConfig) {
 			description: "Catch a desired Pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect <pokemon_name>",
+			description: "Inspect a desired Pokemon that you have caught",
+			callback:    commandInspect,
+		},
+		"pokedex": {
+			name:        "show pokedex",
+			description: "Show the catch Pokemon in the Pokedex",
+			callback:    commandPokedex,
+		},
 	}
 	cmd, ok := commandMap[command]
 	if !ok {
