@@ -7,9 +7,9 @@ Writen in go explore the world of catching Pokemon.
 
 ## Extending the project
 [] Add support for "up" arrow  
-[] Add more unit tests
-[] Use PokeAPI to make exploration more interactive by giving options
-[] Persist pokedex to disk in order to save progress between sessions
+[] Add more unit tests  
+[] Use PokeAPI to make exploration more interactive by giving options  
+[] Persist pokedex to disk in order to save progress between sessions  
 <!--[] Simulate battles between pokemon-->
 <!--[] Refactor code to organize it better and make it more testable-->
 <!--[] Keep pokemon in a "party" and allow them to level up-->
